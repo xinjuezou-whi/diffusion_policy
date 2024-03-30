@@ -31,7 +31,7 @@ from diffusion_policy.real_world.keystroke_counter import (
 
 @click.command()
 @click.option('--output', '-o', required=True, help="Directory to save demonstration dataset.")
-@click.option('--robot_ip', '-ri', required=True, help="UR5's IP address e.g. 192.168.0.204")
+@click.option('--robot_ip', '-ri', required=True, help="UR5's IP address e.g. 192.168.56.100")
 @click.option('--vis_camera_idx', default=0, type=int, help="Which RealSense camera to visualize.")
 @click.option('--init_joints', '-j', is_flag=True, default=False, help="Whether to initialize robot joint configuration in the beginning.")
 @click.option('--frequency', '-f', default=10, type=float, help="Control frequency in Hz.")
@@ -42,8 +42,9 @@ def main(output, robot_ip, vis_camera_idx, init_joints, frequency, command_laten
         with KeystrokeCounter() as key_counter, \
             Spacemouse(shm_manager=shm_manager) as sm, \
             RealEnv(
-                output_dir=output, 
-                robot_ip=robot_ip, 
+                output_dir=output,
+                robot_ip=robot_ip,
+                tcp_offset=0,
                 # recording resolution
                 obs_image_resolution=(1280,720),
                 frequency=frequency,
@@ -108,23 +109,26 @@ def main(output, robot_ip, vis_camera_idx, init_joints, frequency, command_laten
                 stage = key_counter[Key.space]
 
                 # visualize
-                vis_img = obs[f'camera_{vis_camera_idx}'][-1,:,:,::-1].copy()
+                # vis_img = obs[f'camera_{vis_camera_idx}'][-1,:,:,::-1].copy()
                 episode_id = env.replay_buffer.n_episodes
                 text = f'Episode: {episode_id}, Stage: {stage}'
                 if is_recording:
                     text += ', Recording!'
-                cv2.putText(
-                    vis_img,
-                    text,
-                    (10,30),
-                    fontFace=cv2.FONT_HERSHEY_SIMPLEX,
-                    fontScale=1,
-                    thickness=2,
-                    color=(255,255,255)
-                )
+                # cv2.putText(
+                #     vis_img,
+                #     text,
+                #     (10,30),
+                #     fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+                #     fontScale=1,
+                #     thickness=2,
+                #     color=(255,255,255)
+                # )
+                print(text)
 
-                cv2.imshow('default', vis_img)
-                cv2.pollKey()
+                # print("before show")
+                # cv2.imshow('default', vis_img)
+                # print("after show")
+                # cv2.pollKey()
 
                 precise_wait(t_sample)
                 # get teleop command
@@ -133,23 +137,28 @@ def main(output, robot_ip, vis_camera_idx, init_joints, frequency, command_laten
                 dpos = sm_state[:3] * (env.max_pos_speed / frequency)
                 drot_xyz = sm_state[3:] * (env.max_rot_speed / frequency)
                 
-                if not sm.is_button_pressed(0):
+                if not sm.is_button_pressed(0): # left button
                     # translation mode
                     drot_xyz[:] = 0
                 else:
                     dpos[:] = 0
-                if not sm.is_button_pressed(1):
+                if not sm.is_button_pressed(1): # right button
                     # 2D translation mode
                     dpos[2] = 0    
 
                 drot = st.Rotation.from_euler('xyz', drot_xyz)
                 target_pose[:3] += dpos
+                ##### check what is st.Rotation.from_rotvec(target_pose[3:])
+                # print("st.Rotation.from_rotvec: " + repr(st.Rotation.from_rotvec(target_pose[3:])))
                 target_pose[3:] = (drot * st.Rotation.from_rotvec(
                     target_pose[3:])).as_rotvec()
+                # print("target pose: " + repr(target_pose))
 
                 # execute teleop command
+                # target_pose = env.robot.get_tcp_pose()
+                # print(target_pose)
                 env.exec_actions(
-                    actions=[target_pose], 
+                    actions=[target_pose],
                     timestamps=[t_command_target-time.monotonic()+time.time()],
                     stages=[stage])
                 precise_wait(t_cycle_end)

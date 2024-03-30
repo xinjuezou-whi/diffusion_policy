@@ -47,7 +47,7 @@ class RealEnv:
             max_pos_speed=0.25,
             max_rot_speed=0.6,
             # robot
-            tcp_offset=0.13,
+            tcp_offset=0,
             init_joints=False,
             # video capture params
             video_capture_fps=30,
@@ -138,7 +138,7 @@ class RealEnv:
             vis_transform=vis_transform,
             recording_transform=recording_transfrom,
             video_recorder=video_recorder,
-            verbose=False
+            verbose=True
             )
         
         multi_cam_vis = None

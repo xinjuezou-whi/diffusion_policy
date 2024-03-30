@@ -33,10 +33,13 @@ class MultiRealsense:
             shm_manager.start()
         if serial_numbers is None:
             serial_numbers = SingleRealsense.get_connected_devices_serial()
+            print("multi construction: " + repr(serial_numbers))
         n_cameras = len(serial_numbers)
+        print("multi construction: " + repr(n_cameras))
 
         advanced_mode_config = repeat_to_list(
             advanced_mode_config, n_cameras, dict)
+        print("multi construction: " + repr(advanced_mode_config))
         transform = repeat_to_list(
             transform, n_cameras, Callable)
         vis_transform = repeat_to_list(
@@ -46,6 +49,7 @@ class MultiRealsense:
 
         video_recorder = repeat_to_list(
             video_recorder, n_cameras, VideoRecorder)
+        print("multi construction: " + repr(video_recorder))
 
         cameras = dict()
         for i, serial in enumerate(serial_numbers):
@@ -68,9 +72,11 @@ class MultiRealsense:
                 video_recorder=video_recorder[i],
                 verbose=verbose
             )
+            print("multi construction: each camera constructed")
         
         self.cameras = cameras
         self.shm_manager = shm_manager
+        print("multi construction: contructed")
 
     def __enter__(self):
         self.start()
@@ -92,10 +98,13 @@ class MultiRealsense:
         return is_ready
     
     def start(self, wait=True, put_start_time=None):
+        print("multi start: instance starting")
         if put_start_time is None:
             put_start_time = time.time()
         for camera in self.cameras.values():
+            print("multi start: each instance starting")
             camera.start(wait=False, put_start_time=put_start_time)
+            print("multi start: each instance started")
         
         if wait:
             self.start_wait()
@@ -108,8 +117,10 @@ class MultiRealsense:
             self.stop_wait()
 
     def start_wait(self):
+        print("multi start_wait: waiting")
         for camera in self.cameras.values():
             camera.start_wait()
+        print("multi start_wait: waited")
 
     def stop_wait(self):
         for camera in self.cameras.values():

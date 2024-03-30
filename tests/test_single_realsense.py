@@ -1,9 +1,10 @@
 import sys
 import os
 
-ROOT_DIR = os.path.dirname(os.path.dirname(__file__))
-sys.path.append(ROOT_DIR)
-os.chdir(ROOT_DIR)
+# ROOT_DIR = os.path.dirname(os.path.dirname(__file__))
+# sys.path.append(ROOT_DIR)
+# os.chdir(ROOT_DIR)
+sys.path.append('../')
 
 import cv2
 import json
@@ -16,7 +17,7 @@ def test():
     serials = SingleRealsense.get_connected_devices_serial()
     # import pdb; pdb.set_trace()
     serial = serials[0]
-    config = json.load(open('/home/cchi/dev/diffusion_policy/diffusion_policy/real_world/realsense_config/415_high_accuracy_mode.json', 'r'))
+    config = json.load(open('/home/nvidia/Downloads/diffusion_policy/diffusion_policy/real_world/realsense_config/435_high_accuracy_mode.json', 'r'))
 
     def transform(data):
         color = data['color']
@@ -43,21 +44,24 @@ def test():
             # advanced_mode_config=config,
             # transform=transform,
             # recording_transform=transform
-            # verbose=True
+            verbose=True
             ) as realsense:
-            cv2.setNumThreads(1) 
+            print("test: instance constructed")
+            cv2.setNumThreads(1)
             realsense.set_exposure(exposure=150, gain=5)
             intr = realsense.get_intrinsics()
-            print(intr)
+            print("test: intrinsics\n" + repr(intr))
 
 
-            video_path = 'data_local/test.mp4'
+            video_path = 'data_local/test_single.mp4'
             rec_start_time = time.time() + 2
             realsense.start_recording(video_path, start_time=rec_start_time)
+            print("test: record started")
 
             data = None
             while True:
                 data = realsense.get(out=data)
+                print(data)
                 t = time.time()
                 # print('capture_latency', data['receive_timestamp']-data['capture_timestamp'], 'receive_latency', t - data['receive_timestamp'])
                 # print('receive', t - data['receive_timestamp'])
@@ -66,14 +70,13 @@ def test():
                 # print(dt)
                 # print(data['capture_timestamp'] - rec_start_time)
 
-                bgr = data['color']
-                # print(bgr.shape)
-                cv2.imshow('default', bgr)
-                key = cv2.pollKey()
+                # bgr = data['color']
+                # plt.imshow(cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB))
+                # key = cv2.pollKey()
                 # if key == ord('q'):
                 #     break
                 # elif key == ord('r'):
-                #     video_path = 'data_local/test.mp4'
+                #     video_path = 'data_local/test_single.mp4'
                 #     realsense.start_recording(video_path)
                 # elif key == ord('s'):
                 #     realsense.stop_recording()

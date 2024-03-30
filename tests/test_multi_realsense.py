@@ -1,9 +1,10 @@
 import sys
 import os
 
-ROOT_DIR = os.path.dirname(os.path.dirname(__file__))
-sys.path.append(ROOT_DIR)
-os.chdir(ROOT_DIR)
+# ROOT_DIR = os.path.dirname(os.path.dirname(__file__))
+# sys.path.append(ROOT_DIR)
+# os.chdir(ROOT_DIR)
+sys.path.append('../')
 
 import cv2
 import json
@@ -13,7 +14,7 @@ from diffusion_policy.real_world.multi_realsense import MultiRealsense
 from diffusion_policy.real_world.video_recorder import VideoRecorder
 
 def test():
-    config = json.load(open('/home/cchi/dev/diffusion_policy/diffusion_policy/real_world/realsense_config/415_high_accuracy_mode.json', 'r'))
+    config = json.load(open('/home/nvidia/Downloads/diffusion_policy/diffusion_policy/real_world/realsense_config/435_high_accuracy_mode.json', 'r'))
 
     def transform(data):
         color = data['color']
@@ -40,6 +41,7 @@ def test():
         thread_type='FRAME'
     )
 
+    cv2.setNumThreads(1)
     with MultiRealsense(
             resolution=(1280,720),
             capture_fps=30,
@@ -53,19 +55,19 @@ def test():
         ) as realsense:
         realsense.set_exposure(exposure=150, gain=5)
         intr = realsense.get_intrinsics()
-        print(intr)
+        print("test multi intrinsics:\n" + repr(intr))
 
-        video_path = 'data_local/test'
+        video_path = 'data_local/test_multi'
         rec_start_time = time.time() + 1
         realsense.start_recording(video_path, start_time=rec_start_time)
         realsense.restart_put(rec_start_time)
+        print("test multi: record started")
 
         out = None
         vis_img = None
         while True:
             out = realsense.get(out=out)
 
-            # bgr = out['color']
             # print(bgr.shape)
             # vis_img = np.concatenate(list(bgr), axis=0, out=vis_img)
             # cv2.imshow('default', vis_img)

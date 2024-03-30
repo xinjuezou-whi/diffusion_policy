@@ -126,6 +126,7 @@ class SingleRealsense(mp.Process):
                 crf=18,
                 thread_type='FRAME',
                 thread_count=1)
+            print("construction: recorder created")
 
         # copied variables
         self.serial_number = serial_number
@@ -152,6 +153,7 @@ class SingleRealsense(mp.Process):
         self.vis_ring_buffer = vis_ring_buffer
         self.command_queue = command_queue
         self.intrinsics_array = intrinsics_array
+        print("construction: contructed")
     
     @staticmethod
     def get_connected_devices_serial():
@@ -176,10 +178,12 @@ class SingleRealsense(mp.Process):
 
     # ========= user API ===========
     def start(self, wait=True, put_start_time=None):
+        print("start: instance starting")
         self.put_start_time = put_start_time
         super().start()
         if wait:
             self.start_wait()
+        print("start: instance started")
     
     def stop(self, wait=True):
         self.stop_event.set()
@@ -187,7 +191,9 @@ class SingleRealsense(mp.Process):
             self.end_wait()
 
     def start_wait(self):
+        print("start_wait: waiting")
         self.ready_event.wait()
+        print("start_wait: waited")
     
     def end_wait(self):
         self.join()
@@ -277,6 +283,7 @@ class SingleRealsense(mp.Process):
      
     # ========= interval API ===========
     def run(self):
+        print("run: initiated")
         # limit threads
         threadpool_limits(1)
         cv2.setNumThreads(1)
@@ -284,8 +291,10 @@ class SingleRealsense(mp.Process):
         w, h = self.resolution
         fps = self.capture_fps
         align = rs.align(rs.stream.color)
+        print("run: aligned stream")
         # Enable the streams from all the intel realsense devices
         rs_config = rs.config()
+        print("run: got config")
         if self.enable_color:
             rs_config.enable_stream(rs.stream.color, 
                 w, h, rs.format.bgr8, fps)
@@ -298,6 +307,7 @@ class SingleRealsense(mp.Process):
         
         try:
             rs_config.enable_device(self.serial_number)
+            print("run: " + repr(self.serial_number))
 
             # start pipeline
             pipeline = rs.pipeline()
@@ -400,6 +410,7 @@ class SingleRealsense(mp.Process):
                 # signal ready
                 if iter_idx == 0:
                     self.ready_event.set()
+                    print("run: event set")
                 
                 # put to vis
                 vis_data = data
