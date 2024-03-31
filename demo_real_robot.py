@@ -35,7 +35,7 @@ from diffusion_policy.real_world.keystroke_counter import (
 @click.option('--vis_camera_idx', default=0, type=int, help="Which RealSense camera to visualize.")
 @click.option('--init_joints', '-j', is_flag=True, default=False, help="Whether to initialize robot joint configuration in the beginning.")
 @click.option('--frequency', '-f', default=10, type=float, help="Control frequency in Hz.")
-@click.option('--command_latency', '-cl', default=0.01, type=float, help="Latency between receiving SapceMouse command to executing on Robot in Sec.")
+@click.option('--command_latency', '-cl', default=0.05, type=float, help="Latency between receiving SapceMouse command to executing on Robot in Sec.")
 def main(output, robot_ip, vis_camera_idx, init_joints, frequency, command_latency):
     dt = 1/frequency
     with SharedMemoryManager() as shm_manager:
@@ -46,18 +46,24 @@ def main(output, robot_ip, vis_camera_idx, init_joints, frequency, command_laten
                 robot_ip=robot_ip,
                 tcp_offset=0,
                 # recording resolution
-                obs_image_resolution=(1280,720),
+                obs_image_resolution=(424,240),
                 frequency=frequency,
                 init_joints=init_joints,
                 enable_multi_cam_vis=True,
                 record_raw_video=True,
+                video_capture_fps=15,
                 # number of threads per camera view for video recording (H.264)
-                thread_per_video=3,
+                thread_per_video=1,
                 # video recording quality, lower is better (but slower).
-                video_crf=21,
+                # The range of the CRF scale is 0–51, where 0 is lossless (for 8 bit only, for 10 bit use -qp 0),
+                # 23 is the default, and 51 is worst quality possible.
+                # A lower value generally leads to higher quality, and a subjectively sane range is 17–28.
+                # Consider 17 or 18 to be visually lossless or nearly so;
+                # it should look the same or nearly the same as the input but it isn't technically lossless.
+                video_crf=35,
                 shm_manager=shm_manager
             ) as env:
-            cv2.setNumThreads(1)
+            cv2.setNumThreads(2)
 
             # realsense exposure
             env.realsense.set_exposure(exposure=120, gain=0)
