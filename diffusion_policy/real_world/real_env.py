@@ -138,7 +138,7 @@ class RealEnv:
             vis_transform=vis_transform,
             recording_transform=recording_transfrom,
             video_recorder=video_recorder,
-            verbose=True
+            verbose=False
             )
         
         multi_cam_vis = None
