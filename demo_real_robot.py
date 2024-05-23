@@ -46,24 +46,25 @@ def main(output, robot_ip, vis_camera_idx, init_joints, frequency, command_laten
                 robot_ip=robot_ip,
                 tcp_offset=0,
                 # recording resolution
-                obs_image_resolution=(424,240),
+                obs_image_resolution=(640,480),
                 frequency=frequency,
+                max_pos_speed=0.15,
                 init_joints=init_joints,
                 enable_multi_cam_vis=True,
                 record_raw_video=True,
-                video_capture_fps=15,
+                video_capture_fps=30,
                 # number of threads per camera view for video recording (H.264)
-                thread_per_video=1,
+                thread_per_video=3,
                 # video recording quality, lower is better (but slower).
                 # The range of the CRF scale is 0–51, where 0 is lossless (for 8 bit only, for 10 bit use -qp 0),
                 # 23 is the default, and 51 is worst quality possible.
                 # A lower value generally leads to higher quality, and a subjectively sane range is 17–28.
                 # Consider 17 or 18 to be visually lossless or nearly so;
                 # it should look the same or nearly the same as the input but it isn't technically lossless.
-                video_crf=35,
+                video_crf=21,
                 shm_manager=shm_manager
             ) as env:
-            cv2.setNumThreads(2)
+            cv2.setNumThreads(1)
 
             # realsense exposure
             env.realsense.set_exposure(exposure=120, gain=0)
@@ -74,6 +75,7 @@ def main(output, robot_ip, vis_camera_idx, init_joints, frequency, command_laten
             print('Ready!')
             state = env.get_robot_state()
             target_pose = state['TargetTCPPose']
+            print(target_pose)
             t_start = time.monotonic()
             iter_idx = 0
             stop = False
@@ -150,10 +152,16 @@ def main(output, robot_ip, vis_camera_idx, init_joints, frequency, command_laten
                     dpos[:] = 0
                 if not sm.is_button_pressed(1): # right button
                     # 2D translation mode
-                    dpos[2] = 0    
+                    dpos[2] = 0
+                else:
+                    # move z only
+                    dpos[:2] = 0
+                    dpos[2] = -sm_state[0] * (env.max_pos_speed / frequency)
 
                 drot = st.Rotation.from_euler('xyz', drot_xyz)
                 target_pose[:3] += dpos
+                # Xinjue: ranging z in 0.15~0.2
+                target_pose[2] = np.clip(target_pose[2], 0.15, 0.2)
                 ##### check what is st.Rotation.from_rotvec(target_pose[3:])
                 # print("st.Rotation.from_rotvec: " + repr(st.Rotation.from_rotvec(target_pose[3:])))
                 target_pose[3:] = (drot * st.Rotation.from_rotvec(

@@ -55,10 +55,10 @@ OmegaConf.register_new_resolver("eval", eval, replace=True)
 @click.option('--robot_ip', '-ri', required=True, help="UR5's IP address e.g. 192.168.0.204")
 @click.option('--match_dataset', '-m', default=None, help='Dataset used to overlay and adjust initial condition')
 @click.option('--match_episode', '-me', default=None, type=int, help='Match specific episode from the match dataset')
-@click.option('--vis_camera_idx', default=0, type=int, help="Which RealSense camera to visualize.")
+@click.option('--vis_camera_idx', default=1, type=int, help="Which RealSense camera to visualize.")
 @click.option('--init_joints', '-j', is_flag=True, default=False, help="Whether to initialize robot joint configuration in the beginning.")
-@click.option('--steps_per_inference', '-si', default=6, type=int, help="Action horizon for inference.")
-@click.option('--max_duration', '-md', default=60, help='Max duration for each epoch in seconds.')
+@click.option('--steps_per_inference', '-si', default=12, type=int, help="Action horizon for inference.")
+@click.option('--max_duration', '-md', default=120, help='Max duration for each epoch in seconds.')
 @click.option('--frequency', '-f', default=10, type=float, help="Control frequency in Hz.")
 @click.option('--command_latency', '-cl', default=0.01, type=float, help="Latency between receiving SapceMouse command to executing on Robot in Sec.")
 def main(input, output, robot_ip, match_dataset, match_episode,
@@ -417,10 +417,10 @@ def main(input, output, robot_ip, match_dataset, match_episode,
                                 terminate = True
                                 print('Terminated by the timeout!')
 
-                            term_pose = np.array([ 3.40948500e-01,  2.17721816e-01,  4.59076878e-02,  2.22014183e+00, -2.22184883e+00, -4.07186655e-04])
+                            term_pose = np.array([ -0.245,  -0.176,  0.152,  2.223033, 2.21723773, 0.01881684])
                             curr_pose = obs['robot_eef_pose'][-1]
                             dist = np.linalg.norm((curr_pose - term_pose)[:2], axis=-1)
-                            if dist < 0.03:
+                            if dist < 0.03 and time.monotonic() - t_start > 5.0:
                                 # in termination area
                                 curr_timestamp = obs['timestamp'][-1]
                                 if term_area_start_timestamp > curr_timestamp:

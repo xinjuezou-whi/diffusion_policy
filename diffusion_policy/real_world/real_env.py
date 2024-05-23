@@ -38,8 +38,8 @@ class RealEnv:
             frequency=10,
             n_obs_steps=2,
             # obs
-            obs_image_resolution=(640,360),
-            max_obs_buffer_size=15,
+            obs_image_resolution=(640,480),
+            max_obs_buffer_size=30,
             camera_serial_numbers=None,
             obs_key_map=DEFAULT_OBS_KEY_MAP,
             obs_float32=False,
@@ -50,15 +50,15 @@ class RealEnv:
             tcp_offset=0,
             init_joints=False,
             # video capture params
-            video_capture_fps=15,
-            video_capture_resolution=(424,240),
+            video_capture_fps=30,
+            video_capture_resolution=(640,480),
             # saving params
             record_raw_video=True,
             thread_per_video=2,
             video_crf=21,
             # vis params
             enable_multi_cam_vis=True,
-            multi_cam_vis_resolution=(424,240),
+            multi_cam_vis_resolution=(640,480),
             # shared memory
             shm_manager=None
             ):
