@@ -1,4 +1,4 @@
-name: robodiff
+name: whi_diffusion_policy
 channels:
   - pytorch
   - pytorch3d
